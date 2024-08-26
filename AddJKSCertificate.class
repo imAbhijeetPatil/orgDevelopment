@@ -1,0 +1,32 @@
+@Bean
+public RestTemplate sslRestTemplate(RestTemplateBuilder builder) throws Exception {
+char[] password = "GY8vrR6CPxvWCmYN".toCharArray();
+
+SSLContext sslContext = SSLContextBuilder.create()
+.loadKeyMaterial(keyStore(password), password)
+.build();
+
+SSLConnectionSocketFactory socketFactory = new SSLConnectionSocketFactory(sslContext);
+
+HttpClientConnectionManager connectionManager = PoolingHttpClientConnectionManagerBuilder.create()
+.setSSLSocketFactory(socketFactory)
+.build();
+
+HttpClient client = HttpClients.custom()
+.setConnectionManager(connectionManager)
+.evictExpiredConnections()
+.build();
+
+HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory(client);
+
+return new RestTemplate(requestFactory);
+}
+
+private KeyStore keyStore(char[] password) throws Exception {
+KeyStore keyStore = KeyStore.getInstance("JKS"); // or "PKCS12" if that's the type
+Resource resource = new ClassPathResource("keystore.jks"); // Spring Resource for classpath files
+try (InputStream in = resource.getInputStream()) {
+keyStore.load(in, password);
+}
+return keyStore;
+}
